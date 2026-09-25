@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
+﻿from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
-from models import db, Usuario, Vehiculo, Servicio, Solicitud
+from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion
 import os
 
 load_dotenv()
@@ -76,6 +76,37 @@ def crear_solicitud():
 def confirmacion(solicitud_id):
     solicitud = Solicitud.query.get_or_404(solicitud_id)
     return render_template('confirmacion.html', solicitud=solicitud)
+
+@app.route('/solicitudes-pendientes')
+def listar_solicitudes_pendientes():
+    solicitudes = Solicitud.query.filter(~Solicitud.cotizaciones.any()).all()
+    return render_template('solicitudes_pendientes.html', solicitudes=solicitudes)
+
+@app.route('/cotizacion/nueva/<int:solicitud_id>')
+def mostrar_form_cotizacion(solicitud_id):
+    solicitud = Solicitud.query.get_or_404(solicitud_id)
+    return render_template('form_cotizacion.html', solicitud=solicitud)
+
+@app.route('/cotizacion/crear/<int:solicitud_id>', methods=['POST'])
+def crear_cotizacion(solicitud_id):
+    monto = request.form['monto']
+    detalle = request.form.get('detalle')
+
+    nueva_cotizacion = Cotizacion(
+        solicitud_id=solicitud_id,
+        monto=monto,
+        detalle=detalle,
+        estado='pendiente'
+    )
+    db.session.add(nueva_cotizacion)
+    db.session.commit()
+
+    return redirect(url_for('confirmacion_cotizacion', cotizacion_id=nueva_cotizacion.id))
+
+@app.route('/cotizacion/confirmacion/<int:cotizacion_id>')
+def confirmacion_cotizacion(cotizacion_id):
+    cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
+    return render_template('confirmacion_cotizacion.html', cotizacion=cotizacion)
 
 if __name__ == '__main__':
     with app.app_context():

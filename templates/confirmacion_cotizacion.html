@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cotizacion Generada - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Cotizacion generada con exito</h1>
+    <p>Cotizacion #{{ cotizacion.id }} para la Solicitud #{{ cotizacion.solicitud.id }}</p>
+    <p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
+    <p>Monto: ${{ cotizacion.monto }}</p>
+    <p>Detalle: {{ cotizacion.detalle }}</p>
+    <p>Estado: {{ cotizacion.estado }}</p>
+
+    <a href="{{ url_for('listar_solicitudes_pendientes') }}">Ver mas solicitudes pendientes</a>
+</body>
+</html>

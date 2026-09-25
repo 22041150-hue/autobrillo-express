@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Solicitudes Pendientes - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Solicitudes Pendientes de Cotizacion</h1>
+
+    {% if solicitudes %}
+    <ul>
+        {% for solicitud in solicitudes %}
+        <li>
+            Solicitud #{{ solicitud.id }} -
+            {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }} -
+            Servicio: {{ solicitud.servicio.nombre }} -
+            Cliente: {{ solicitud.usuario.nombre }}
+            <a href="{{ url_for('mostrar_form_cotizacion', solicitud_id=solicitud.id) }}">Generar cotizacion</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No hay solicitudes pendientes de cotizacion.</p>
+    {% endif %}
+</body>
+</html>
