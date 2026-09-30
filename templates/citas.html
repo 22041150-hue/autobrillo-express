@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Citas - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Citas</h1>
+
+    {% if citas %}
+    <ul>
+        {% for cita in citas %}
+        <li>
+            Cita #{{ cita.id }} -
+            Cliente: {{ cita.solicitud.usuario.nombre }} -
+            Servicio: {{ cita.solicitud.servicio.nombre }} -
+            Fecha: {{ cita.fecha_hora }} -
+            Estado: <strong>{{ cita.estado }}</strong>
+
+            {% if cita.estado == 'agendada' %}
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='confirmada') }}" style="display:inline">
+                <button type="submit">Confirmar</button>
+            </form>
+            {% elif cita.estado == 'confirmada' %}
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='completada') }}" style="display:inline">
+                <button type="submit">Marcar completada</button>
+            </form>
+            {% endif %}
+
+            {% if cita.estado not in ['completada', 'cancelada'] %}
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='cancelada') }}" style="display:inline">
+                <button type="submit">Cancelar</button>
+            </form>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No hay citas registradas.</p>
+    {% endif %}
+</body>
+</html>

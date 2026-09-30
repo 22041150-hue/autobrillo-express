@@ -157,6 +157,17 @@ def crear_cita(cotizacion_id):
 def confirmacion_cita(cita_id):
     cita = Cita.query.get_or_404(cita_id)
     return render_template('confirmacion_cita.html', cita=cita)
+@app.route('/citas')
+def listar_citas():
+    citas = Cita.query.all()
+    return render_template('citas.html', citas=citas)
+
+@app.route('/cita/estado/<int:cita_id>/<nuevo_estado>', methods=['POST'])
+def actualizar_estado_cita(cita_id, nuevo_estado):
+    cita = Cita.query.get_or_404(cita_id)
+    cita.estado = nuevo_estado
+    db.session.commit()
+    return redirect(url_for('listar_citas'))
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
