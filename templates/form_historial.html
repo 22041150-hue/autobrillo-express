@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Historial - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Registrar Historial de Reparacion</h1>
+    <p>Cita #{{ cita.id }}</p>
+    <p>Cliente: {{ cita.solicitud.usuario.nombre }}</p>
+    <p>Servicio: {{ cita.solicitud.servicio.nombre }}</p>
+
+    <form method="POST" action="{{ url_for('crear_historial', cita_id=cita.id) }}">
+        <label>Notas de la reparacion:</label><br>
+        <textarea name="notas" rows="5" cols="40" required></textarea><br>
+
+        <button type="submit">Guardar historial</button>
+    </form>
+</body>
+</html>

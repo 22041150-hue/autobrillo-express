@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
-from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita
+from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 import os
@@ -167,6 +167,24 @@ def actualizar_estado_cita(cita_id, nuevo_estado):
     cita = Cita.query.get_or_404(cita_id)
     cita.estado = nuevo_estado
     db.session.commit()
+    return redirect(url_for('listar_citas'))
+@app.route('/historial/nuevo/<int:cita_id>')
+def mostrar_form_historial(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    return render_template('form_historial.html', cita=cita)
+
+@app.route('/historial/crear/<int:cita_id>', methods=['POST'])
+def crear_historial(cita_id):
+    notas = request.form['notas']
+
+    nuevo_historial = HistorialReparacion(
+        cita_id=cita_id,
+        notas=notas,
+        fecha_finalizacion=datetime.now()
+    )
+    db.session.add(nuevo_historial)
+    db.session.commit()
+
     return redirect(url_for('listar_citas'))
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():

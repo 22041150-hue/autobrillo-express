@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -33,6 +33,12 @@
                 <button type="submit">Cancelar</button>
             </form>
             {% endif %}
+
+            {% if cita.estado == 'completada' and not cita.historial %}
+            <a href="{{ url_for('mostrar_form_historial', cita_id=cita.id) }}">Registrar historial</a>
+            {% elif cita.historial %}
+            <span>(Historial ya registrado)</span>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>
@@ -41,3 +47,4 @@
     {% endif %}
 </body>
 </html>
+
