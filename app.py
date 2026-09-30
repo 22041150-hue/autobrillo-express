@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
-from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion
+from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion, Resenha
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 import os
@@ -183,6 +183,27 @@ def crear_historial(cita_id):
         fecha_finalizacion=datetime.now()
     )
     db.session.add(nuevo_historial)
+    db.session.commit()
+
+    return redirect(url_for('listar_citas'))
+@app.route('/resenha/nueva/<int:cita_id>')
+def mostrar_form_resenha(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    return render_template('form_resenha.html', cita=cita)
+
+@app.route('/resenha/crear/<int:cita_id>', methods=['POST'])
+def crear_resenha(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    calificacion = request.form['calificacion']
+    comentario = request.form.get('comentario')
+
+    nueva_resenha = Resenha(
+        usuario_id=cita.solicitud.usuario_id,
+        cita_id=cita_id,
+        calificacion=calificacion,
+        comentario=comentario
+    )
+    db.session.add(nueva_resenha)
     db.session.commit()
 
     return redirect(url_for('listar_citas'))

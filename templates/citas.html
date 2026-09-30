@@ -39,6 +39,12 @@
             {% elif cita.historial %}
             <span>(Historial ya registrado)</span>
             {% endif %}
+
+            {% if cita.estado == 'completada' and not cita.resenha %}
+            <a href="{{ url_for('mostrar_form_resenha', cita_id=cita.id) }}">Dejar resenha</a>
+            {% elif cita.resenha %}
+            <span>(Resenha: {{ cita.resenha[0].calificacion }}/5)</span>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>
@@ -47,4 +53,5 @@
     {% endif %}
 </body>
 </html>
+
 
