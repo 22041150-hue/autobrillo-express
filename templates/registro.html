@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Crear cuenta</h1>
+    <form method="POST" action="{{ url_for('registro') }}">
+        <label>Nombre completo:</label>
+        <input type="text" name="nombre" required><br>
+
+        <label>Correo electronico:</label>
+        <input type="email" name="email" required><br>
+
+        <label>Contrasena:</label>
+        <input type="password" name="password" required><br>
+
+        <label>Telefono:</label>
+        <input type="text" name="telefono"><br>
+
+        <button type="submit">Registrarme</button>
+    </form>
+    <p>Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesion</a></p>
+</body>
+</html>

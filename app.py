@@ -1,7 +1,9 @@
-﻿from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
 from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_bcrypt import Bcrypt
 import os
 
 load_dotenv()
@@ -16,8 +18,17 @@ db_password = os.getenv("DB_PASSWORD")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql+psycopg2://" + db_user + ":" + db_password + "@" + db_host + ":" + db_port + "/" + db_name
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db.init_app(app)
+
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 @app.route('/')
 def index():
@@ -108,6 +119,57 @@ def confirmacion_cotizacion(cotizacion_id):
     cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
     return render_template('confirmacion_cotizacion.html', cotizacion=cotizacion)
 
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        email = request.form['email']
+        password = request.form['password']
+        telefono = request.form.get('telefono')
+
+        existente = Usuario.query.filter_by(email=email).first()
+        if existente:
+            return 'Ese correo ya esta registrado. <a href="/registro">Volver</a>'
+
+        password_encriptado = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        nuevo_usuario = Usuario(
+            nombre=nombre,
+            email=email,
+            password_hash=password_encriptado,
+            rol='cliente',
+            telefono=telefono
+        )
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        login_user(nuevo_usuario)
+        return redirect(url_for('index'))
+
+    return render_template('registro.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        usuario = Usuario.query.filter_by(email=email).first()
+
+        if usuario and bcrypt.check_password_hash(usuario.password_hash, password):
+            login_user(usuario)
+            return redirect(url_for('index'))
+        else:
+            return 'Correo o contrasena incorrectos. <a href="/login">Volver</a>'
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
