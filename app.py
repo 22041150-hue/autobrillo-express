@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
-from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion
+from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 import os
@@ -119,7 +119,44 @@ def confirmacion_cotizacion(cotizacion_id):
     cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
     return render_template('confirmacion_cotizacion.html', cotizacion=cotizacion)
 
+@app.route('/cotizacion/aceptar/<int:cotizacion_id>', methods=['POST'])
+def aceptar_cotizacion(cotizacion_id):
+    cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
+    cotizacion.estado = 'aceptada'
+    db.session.commit()
+    return redirect(url_for('confirmacion_cotizacion', cotizacion_id=cotizacion.id))
+@app.route('/cotizaciones-aceptadas')
+def listar_cotizaciones_aceptadas():
+    cotizaciones = Cotizacion.query.filter_by(estado='aceptada').join(Solicitud).filter(~Solicitud.citas.any()).all()
+    return render_template('cotizaciones_aceptadas.html', cotizaciones=cotizaciones)
 
+@app.route('/cita/nueva/<int:cotizacion_id>')
+def mostrar_form_cita(cotizacion_id):
+    cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
+    empleados = Usuario.query.filter_by(rol='empleado').all()
+    return render_template('form_cita.html', cotizacion=cotizacion, empleados=empleados)
+
+@app.route('/cita/crear/<int:cotizacion_id>', methods=['POST'])
+def crear_cita(cotizacion_id):
+    cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
+    fecha_hora = request.form['fecha_hora']
+    empleado_id = request.form.get('empleado_id')
+
+    nueva_cita = Cita(
+        solicitud_id=cotizacion.solicitud_id,
+        empleado_id=empleado_id if empleado_id else None,
+        fecha_hora=fecha_hora,
+        estado='agendada'
+    )
+    db.session.add(nueva_cita)
+    db.session.commit()
+
+    return redirect(url_for('confirmacion_cita', cita_id=nueva_cita.id))
+
+@app.route('/cita/confirmacion/<int:cita_id>')
+def confirmacion_cita(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    return render_template('confirmacion_cita.html', cita=cita)
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':

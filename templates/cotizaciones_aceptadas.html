@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cotizaciones Aceptadas - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Cotizaciones Aceptadas Pendientes de Agendar</h1>
+
+    {% if cotizaciones %}
+    <ul>
+        {% for cotizacion in cotizaciones %}
+        <li>
+            Cotizacion #{{ cotizacion.id }} -
+            Cliente: {{ cotizacion.solicitud.usuario.nombre }} -
+            Servicio: {{ cotizacion.solicitud.servicio.nombre }} -
+            Monto: ${{ cotizacion.monto }}
+            <a href="{{ url_for('mostrar_form_cita', cotizacion_id=cotizacion.id) }}">Agendar cita</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No hay cotizaciones aceptadas pendientes de agendar.</p>
+    {% endif %}
+</body>
+</html>

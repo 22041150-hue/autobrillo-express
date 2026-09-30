@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cita Agendada - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Cita agendada con exito</h1>
+    <p>Cita #{{ cita.id }}</p>
+    <p>Cliente: {{ cita.solicitud.usuario.nombre }}</p>
+    <p>Servicio: {{ cita.solicitud.servicio.nombre }}</p>
+    <p>Fecha y hora: {{ cita.fecha_hora }}</p>
+    <p>Empleado asignado: {{ cita.empleado.nombre if cita.empleado else 'Sin asignar' }}</p>
+    <p>Estado: {{ cita.estado }}</p>
+
+    <a href="{{ url_for('listar_cotizaciones_aceptadas') }}">Ver mas cotizaciones pendientes de agendar</a>
+</body>
+</html>
