@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Dashboard - Administrador</h1>
+    <p>Bienvenido, {{ current_user.nombre }}</p>
+    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+
+    <h2>Resumen</h2>
+    <ul>
+        <li>Solicitudes pendientes de cotizar: {{ total_solicitudes_pendientes }}</li>
+        <li>Cotizaciones pendientes de aceptar: {{ total_cotizaciones_pendientes }}</li>
+        <li>Citas agendadas/confirmadas: {{ total_citas_agendadas }}</li>
+        <li>Facturas pendientes de pago: {{ total_facturas_pendientes }}</li>
+    </ul>
+
+    <h2>Accesos rapidos</h2>
+    <ul>
+        <li><a href="{{ url_for('listar_solicitudes_pendientes') }}">Ver solicitudes pendientes</a></li>
+        <li><a href="{{ url_for('listar_cotizaciones_aceptadas') }}">Ver cotizaciones aceptadas</a></li>
+        <li><a href="{{ url_for('listar_citas') }}">Ver todas las citas</a></li>
+    </ul>
+</body>
+</html>

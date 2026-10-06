@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+﻿from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -102,4 +102,4 @@ class Factura(db.Model):
     metodo_pago = db.Column(db.String(30))
     estado = db.Column(db.String(20), default='pendiente')
 
-    cotizacion = db.relationship('Cotizacion', backref='factura', lazy=True)
+    cotizacion = db.relationship('Cotizacion', backref=db.backref('factura', uselist=False), lazy=True)

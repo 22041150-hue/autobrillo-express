@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Cliente - AutoBrillo Express</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Dashboard - Cliente</h1>
+    <p>Bienvenido, {{ current_user.nombre }}</p>
+    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+
+    <h2>Mis solicitudes</h2>
+    {% if solicitudes %}
+    <ul>
+        {% for solicitud in solicitudes %}
+        <li>
+            Solicitud #{{ solicitud.id }} -
+            Servicio: {{ solicitud.servicio.nombre }} -
+            Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }} -
+            Estado: <strong>{{ solicitud.estado }}</strong>
+
+            {% set cotizacion_aceptada = solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
+            {% if cotizacion_aceptada %}
+            <br>Cotizacion aceptada: ${{ cotizacion_aceptada.monto }}
+                {% if cotizacion_aceptada.factura %}
+                - Factura: {{ cotizacion_aceptada.factura.estado }}
+                {% endif %}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Aun no tienes solicitudes registradas con esta cuenta.</p>
+    {% endif %}
+
+    <a href="{{ url_for('mostrar_formulario') }}">Nueva solicitud</a>
+</body>
+</html>

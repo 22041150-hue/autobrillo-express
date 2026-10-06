@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+﻿from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 from datetime import datetime
-from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion, Resenha
+from functools import wraps
+from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion, Resenha, Factura
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 import os
@@ -30,9 +31,60 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+
+def rol_requerido(*roles_permitidos):
+    def decorador(f):
+        @wraps(f)
+        def funcion_envuelta(*args, **kwargs):
+            if current_user.rol not in roles_permitidos:
+                return 'No tienes permiso para ver esta pagina.', 403
+            return f(*args, **kwargs)
+        return funcion_envuelta
+    return decorador
+
 @app.route('/')
 def index():
     return 'AutoBrillo Express - Servidor funcionando'
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.rol == 'admin':
+        return redirect(url_for('dashboard_admin'))
+    elif current_user.rol == 'empleado':
+        return redirect(url_for('dashboard_empleado'))
+    else:
+        return redirect(url_for('dashboard_cliente'))
+
+@app.route('/dashboard/admin')
+@login_required
+@rol_requerido('admin')
+def dashboard_admin():
+    total_solicitudes_pendientes = Solicitud.query.filter(~Solicitud.cotizaciones.any()).count()
+    total_cotizaciones_pendientes = Cotizacion.query.filter_by(estado='pendiente').count()
+    total_citas_agendadas = Cita.query.filter(Cita.estado.in_(['agendada', 'confirmada'])).count()
+    total_facturas_pendientes = Factura.query.filter_by(estado='pendiente').count()
+    return render_template(
+        'dashboard_admin.html',
+        total_solicitudes_pendientes=total_solicitudes_pendientes,
+        total_cotizaciones_pendientes=total_cotizaciones_pendientes,
+        total_citas_agendadas=total_citas_agendadas,
+        total_facturas_pendientes=total_facturas_pendientes
+    )
+
+@app.route('/dashboard/empleado')
+@login_required
+@rol_requerido('empleado')
+def dashboard_empleado():
+    citas = Cita.query.filter_by(empleado_id=current_user.id).order_by(Cita.fecha_hora).all()
+    return render_template('dashboard_empleado.html', citas=citas)
+
+@app.route('/dashboard/cliente')
+@login_required
+@rol_requerido('cliente')
+def dashboard_cliente():
+    solicitudes = Solicitud.query.filter_by(usuario_id=current_user.id).order_by(Solicitud.fecha_solicitud.desc()).all()
+    return render_template('dashboard_cliente.html', solicitudes=solicitudes)
 
 @app.route('/solicitud')
 def mostrar_formulario():
@@ -125,6 +177,7 @@ def aceptar_cotizacion(cotizacion_id):
     cotizacion.estado = 'aceptada'
     db.session.commit()
     return redirect(url_for('confirmacion_cotizacion', cotizacion_id=cotizacion.id))
+
 @app.route('/cotizaciones-aceptadas')
 def listar_cotizaciones_aceptadas():
     cotizaciones = Cotizacion.query.filter_by(estado='aceptada').join(Solicitud).filter(~Solicitud.citas.any()).all()
@@ -157,6 +210,7 @@ def crear_cita(cotizacion_id):
 def confirmacion_cita(cita_id):
     cita = Cita.query.get_or_404(cita_id)
     return render_template('confirmacion_cita.html', cita=cita)
+
 @app.route('/citas')
 def listar_citas():
     citas = Cita.query.all()
@@ -168,6 +222,7 @@ def actualizar_estado_cita(cita_id, nuevo_estado):
     cita.estado = nuevo_estado
     db.session.commit()
     return redirect(url_for('listar_citas'))
+
 @app.route('/historial/nuevo/<int:cita_id>')
 def mostrar_form_historial(cita_id):
     cita = Cita.query.get_or_404(cita_id)
@@ -186,6 +241,46 @@ def crear_historial(cita_id):
     db.session.commit()
 
     return redirect(url_for('listar_citas'))
+
+@app.route('/factura/crear/<int:cita_id>', methods=['POST'])
+def crear_factura(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    cotizacion = Cotizacion.query.filter_by(
+        solicitud_id=cita.solicitud_id, estado='aceptada'
+    ).first_or_404()
+
+    if cotizacion.factura:
+        return redirect(url_for('confirmacion_factura', factura_id=cotizacion.factura.id))
+
+    folio = 'AB-' + datetime.now().strftime('%Y%m%d%H%M%S')
+
+    nueva_factura = Factura(
+        cotizacion_id=cotizacion.id,
+        folio=folio,
+        total=cotizacion.monto,
+        estado='pendiente'
+    )
+    db.session.add(nueva_factura)
+    db.session.commit()
+
+    return redirect(url_for('confirmacion_factura', factura_id=nueva_factura.id))
+
+@app.route('/factura/confirmacion/<int:factura_id>')
+def confirmacion_factura(factura_id):
+    factura = Factura.query.get_or_404(factura_id)
+    return render_template('confirmacion_factura.html', factura=factura)
+
+@app.route('/factura/pagar/<int:factura_id>', methods=['POST'])
+def pagar_factura(factura_id):
+    factura = Factura.query.get_or_404(factura_id)
+    metodo_pago = request.form.get('metodo_pago')
+
+    factura.estado = 'pagada'
+    factura.metodo_pago = metodo_pago
+    db.session.commit()
+
+    return redirect(url_for('confirmacion_factura', factura_id=factura.id))
+
 @app.route('/resenha/nueva/<int:cita_id>')
 def mostrar_form_resenha(cita_id):
     cita = Cita.query.get_or_404(cita_id)
@@ -207,6 +302,7 @@ def crear_resenha(cita_id):
     db.session.commit()
 
     return redirect(url_for('listar_citas'))
+
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
@@ -232,7 +328,7 @@ def registro():
         db.session.commit()
 
         login_user(nuevo_usuario)
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
 
     return render_template('registro.html')
 
@@ -246,7 +342,7 @@ def login():
 
         if usuario and bcrypt.check_password_hash(usuario.password_hash, password):
             login_user(usuario)
-            return redirect(url_for('index'))
+            return redirect(url_for('dashboard'))
         else:
             return 'Correo o contrasena incorrectos. <a href="/login">Volver</a>'
 
@@ -257,6 +353,7 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

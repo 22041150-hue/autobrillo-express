@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,7 @@
     {% if citas %}
     <ul>
         {% for cita in citas %}
+        {% set cotizacion_aceptada = cita.solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
         <li>
             Cita #{{ cita.id }} -
             Cliente: {{ cita.solicitud.usuario.nombre }} -
@@ -45,6 +46,14 @@
             {% elif cita.resenha %}
             <span>(Resenha: {{ cita.resenha[0].calificacion }}/5)</span>
             {% endif %}
+
+            {% if cita.estado == 'completada' and cotizacion_aceptada and not cotizacion_aceptada.factura %}
+            <form method="POST" action="{{ url_for('crear_factura', cita_id=cita.id) }}" style="display:inline">
+                <button type="submit">Generar factura</button>
+            </form>
+            {% elif cotizacion_aceptada and cotizacion_aceptada.factura %}
+            <a href="{{ url_for('confirmacion_factura', factura_id=cotizacion_aceptada.factura.id) }}">Ver factura ({{ cotizacion_aceptada.factura.estado }})</a>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>
@@ -53,5 +62,3 @@
     {% endif %}
 </body>
 </html>
-
-
