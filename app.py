@@ -1,10 +1,14 @@
-﻿from flask import Flask, render_template, request, redirect, url_for
+﻿from flask import Flask, render_template, request, redirect, url_for, Response
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
 from functools import wraps
+from sqlalchemy import or_
 from models import db, Usuario, Vehiculo, Servicio, Solicitud, Cotizacion, Cita, HistorialReparacion, Resenha, Factura
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
+import csv
+import io
 import os
 
 load_dotenv()
@@ -27,6 +31,9 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+BAHIAS = ['Bahia 1', 'Bahia 2', 'Bahia 3']
+ETAPAS = ['recibido', 'en lavado', 'en detallado', 'control de calidad', 'terminado', 'entregado']
+
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
@@ -42,9 +49,52 @@ def rol_requerido(*roles_permitidos):
         return funcion_envuelta
     return decorador
 
+
+def monto_aceptado(solicitud):
+    for c in solicitud.cotizaciones:
+        if c.estado == 'aceptada':
+            return c.monto
+    return 0
+
+
+def filas_historial(q, desde, hasta):
+    consulta = (HistorialReparacion.query
+                .join(Cita, HistorialReparacion.cita_id == Cita.id)
+                .join(Solicitud, Cita.solicitud_id == Solicitud.id)
+                .join(Usuario, Solicitud.usuario_id == Usuario.id)
+                .join(Vehiculo, Solicitud.vehiculo_id == Vehiculo.id))
+    if q:
+        patron = '%' + q + '%'
+        consulta = consulta.filter(or_(
+            Usuario.nombre.ilike(patron),
+            Vehiculo.placas.ilike(patron),
+            Vehiculo.modelo.ilike(patron)
+        ))
+    if desde:
+        consulta = consulta.filter(HistorialReparacion.fecha_finalizacion >= datetime.strptime(desde, '%Y-%m-%d'))
+    if hasta:
+        consulta = consulta.filter(HistorialReparacion.fecha_finalizacion < datetime.strptime(hasta, '%Y-%m-%d') + timedelta(days=1))
+    registros = consulta.order_by(HistorialReparacion.fecha_finalizacion.desc()).all()
+
+    filas = []
+    for h in registros:
+        sol = h.cita.solicitud
+        filas.append({
+            'folio': 'H-' + str(h.id),
+            'cliente': sol.usuario.nombre,
+            'vehiculo': sol.vehiculo.marca + ' ' + sol.vehiculo.modelo + ' (' + (sol.vehiculo.placas or 'sin placas') + ')',
+            'servicio': sol.servicio.nombre,
+            'fecha': h.fecha_finalizacion.strftime('%d/%m/%Y') if h.fecha_finalizacion else '',
+            'total': monto_aceptado(sol),
+            'notas': h.notas
+        })
+    return filas
+
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    resenhas = Resenha.query.filter_by(visible=True).order_by(Resenha.fecha.desc()).limit(5).all()
+    return render_template('index.html', resenhas=resenhas)
 
 @app.route('/dashboard')
 @login_required
@@ -101,6 +151,8 @@ def crear_solicitud():
     placas = request.form.get('placas')
     servicio_id = request.form['servicio_id']
     descripcion = request.form.get('descripcion')
+    a_domicilio = 'a_domicilio' in request.form
+    urgente = 'urgente' in request.form
 
     nuevo_usuario = Usuario(
         nombre=nombre_cliente,
@@ -128,7 +180,9 @@ def crear_solicitud():
         vehiculo_id=nuevo_vehiculo.id,
         servicio_id=servicio_id,
         descripcion=descripcion,
-        estado='pendiente'
+        estado='pendiente',
+        a_domicilio=a_domicilio,
+        urgente=urgente
     )
     db.session.add(nueva_solicitud)
     db.session.commit()
@@ -152,14 +206,19 @@ def mostrar_form_cotizacion(solicitud_id):
 
 @app.route('/cotizacion/crear/<int:solicitud_id>', methods=['POST'])
 def crear_cotizacion(solicitud_id):
-    monto = request.form['monto']
+    precio = Decimal(request.form['monto'])
+    descuento = Decimal(request.form.get('descuento') or 0)
+    total = (precio * (Decimal(100) - descuento) / Decimal(100)).quantize(Decimal('0.01'))
     detalle = request.form.get('detalle')
+    vigencia = request.form.get('vigencia')
 
     nueva_cotizacion = Cotizacion(
         solicitud_id=solicitud_id,
-        monto=monto,
+        monto=total,
         detalle=detalle,
-        estado='pendiente'
+        estado='pendiente',
+        descuento=descuento,
+        vigencia=datetime.strptime(vigencia, '%Y-%m-%d').date() if vigencia else None
     )
     db.session.add(nueva_cotizacion)
     db.session.commit()
@@ -187,19 +246,42 @@ def listar_cotizaciones_aceptadas():
 def mostrar_form_cita(cotizacion_id):
     cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
     empleados = Usuario.query.filter_by(rol='empleado').all()
-    return render_template('form_cita.html', cotizacion=cotizacion, empleados=empleados)
+    return render_template('form_cita.html', cotizacion=cotizacion, empleados=empleados, bahias=BAHIAS)
 
 @app.route('/cita/crear/<int:cotizacion_id>', methods=['POST'])
 def crear_cita(cotizacion_id):
     cotizacion = Cotizacion.query.get_or_404(cotizacion_id)
-    fecha_hora = request.form['fecha_hora']
+    fecha_hora = datetime.strptime(request.form['fecha_hora'], '%Y-%m-%dT%H:%M')
     empleado_id = request.form.get('empleado_id')
+    bahia = request.form.get('bahia')
+    duracion = request.form.get('duracion_min')
+    notas = request.form.get('notas')
+    recordatorio_correo = 'recordatorio_correo' in request.form
+    recordatorio_sms = 'recordatorio_sms' in request.form
+
+    if bahia:
+        ocupada = Cita.query.filter(
+            Cita.bahia == bahia,
+            Cita.fecha_hora == fecha_hora,
+            Cita.estado != 'cancelada'
+        ).first()
+        if ocupada:
+            return 'Esa bahia ya esta ocupada a esa hora. <a href="javascript:history.back()">Volver</a>'
+
+    duracion_min = int(duracion) if duracion else None
 
     nueva_cita = Cita(
         solicitud_id=cotizacion.solicitud_id,
         empleado_id=empleado_id if empleado_id else None,
         fecha_hora=fecha_hora,
-        estado='agendada'
+        estado='agendada',
+        bahia=bahia if bahia else None,
+        duracion_min=duracion_min,
+        recordatorio_correo=recordatorio_correo,
+        recordatorio_sms=recordatorio_sms,
+        notas=notas,
+        etapa='recibido',
+        fecha_estimada_entrega=fecha_hora + timedelta(minutes=duracion_min) if duracion_min else None
     )
     db.session.add(nueva_cita)
     db.session.commit()
@@ -223,6 +305,23 @@ def actualizar_estado_cita(cita_id, nuevo_estado):
     db.session.commit()
     return redirect(url_for('listar_citas'))
 
+@app.route('/cita/estatus/<int:cita_id>', methods=['GET', 'POST'])
+@login_required
+@rol_requerido('admin', 'empleado')
+def estatus_cita(cita_id):
+    cita = Cita.query.get_or_404(cita_id)
+    if request.method == 'POST':
+        cita.etapa = request.form['etapa']
+        entrega = request.form.get('fecha_estimada_entrega')
+        cita.fecha_estimada_entrega = datetime.strptime(entrega, '%Y-%m-%dT%H:%M') if entrega else None
+        cita.estatus_pago = request.form['estatus_pago']
+        cita.monto_pagado = request.form.get('monto_pagado') or 0
+        if cita.etapa == 'entregado' and not cita.fecha_real_entrega:
+            cita.fecha_real_entrega = datetime.now()
+        db.session.commit()
+        return redirect(url_for('listar_citas'))
+    return render_template('estatus_cita.html', cita=cita, etapas=ETAPAS)
+
 @app.route('/historial/nuevo/<int:cita_id>')
 def mostrar_form_historial(cita_id):
     cita = Cita.query.get_or_404(cita_id)
@@ -242,6 +341,37 @@ def crear_historial(cita_id):
 
     return redirect(url_for('listar_citas'))
 
+@app.route('/historial')
+@login_required
+@rol_requerido('admin', 'empleado')
+def listar_historial():
+    q = request.args.get('q', '')
+    desde = request.args.get('desde', '')
+    hasta = request.args.get('hasta', '')
+    filas = filas_historial(q, desde, hasta)
+    return render_template('historial.html', filas=filas, q=q, desde=desde, hasta=hasta)
+
+@app.route('/historial/exportar')
+@login_required
+@rol_requerido('admin', 'empleado')
+def exportar_historial():
+    q = request.args.get('q', '')
+    desde = request.args.get('desde', '')
+    hasta = request.args.get('hasta', '')
+    filas = filas_historial(q, desde, hasta)
+
+    salida = io.StringIO()
+    escritor = csv.writer(salida)
+    escritor.writerow(['Folio', 'Cliente', 'Vehiculo', 'Servicio', 'Fecha', 'Total'])
+    for f in filas:
+        escritor.writerow([f['folio'], f['cliente'], f['vehiculo'], f['servicio'], f['fecha'], f['total']])
+
+    return Response(
+        '\ufeff' + salida.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=historial.csv'}
+    )
+
 @app.route('/factura/crear/<int:cita_id>', methods=['POST'])
 def crear_factura(cita_id):
     cita = Cita.query.get_or_404(cita_id)
@@ -254,10 +384,15 @@ def crear_factura(cita_id):
 
     folio = 'AB-' + datetime.now().strftime('%Y%m%d%H%M%S')
 
+    subtotal = cotizacion.monto
+    iva = (subtotal * Decimal('0.16')).quantize(Decimal('0.01'))
+
     nueva_factura = Factura(
         cotizacion_id=cotizacion.id,
         folio=folio,
-        total=cotizacion.monto,
+        subtotal=subtotal,
+        iva=iva,
+        total=subtotal + iva,
         estado='pendiente'
     )
     db.session.add(nueva_factura)
@@ -273,10 +408,16 @@ def confirmacion_factura(factura_id):
 @app.route('/factura/pagar/<int:factura_id>', methods=['POST'])
 def pagar_factura(factura_id):
     factura = Factura.query.get_or_404(factura_id)
-    metodo_pago = request.form.get('metodo_pago')
 
     factura.estado = 'pagada'
-    factura.metodo_pago = metodo_pago
+    factura.metodo_pago = request.form.get('metodo_pago')
+    factura.rfc = request.form.get('rfc') or None
+    factura.uso_cfdi = request.form.get('uso_cfdi') or None
+
+    for cita in factura.cotizacion.solicitud.citas:
+        cita.estatus_pago = 'pagado'
+        cita.monto_pagado = factura.total
+
     db.session.commit()
 
     return redirect(url_for('confirmacion_factura', factura_id=factura.id))
@@ -296,12 +437,30 @@ def crear_resenha(cita_id):
         usuario_id=cita.solicitud.usuario_id,
         cita_id=cita_id,
         calificacion=calificacion,
-        comentario=comentario
+        comentario=comentario,
+        publicar_nombre='publicar_nombre' in request.form,
+        visible=True
     )
     db.session.add(nueva_resenha)
     db.session.commit()
 
     return redirect(url_for('listar_citas'))
+
+@app.route('/resenhas')
+@login_required
+@rol_requerido('admin')
+def moderar_resenhas():
+    resenhas = Resenha.query.order_by(Resenha.fecha.desc()).all()
+    return render_template('resenhas_admin.html', resenhas=resenhas)
+
+@app.route('/resenha/visibilidad/<int:resenha_id>', methods=['POST'])
+@login_required
+@rol_requerido('admin')
+def cambiar_visibilidad_resenha(resenha_id):
+    resenha = Resenha.query.get_or_404(resenha_id)
+    resenha.visible = not resenha.visible
+    db.session.commit()
+    return redirect(url_for('moderar_resenhas'))
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():

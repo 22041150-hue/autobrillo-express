@@ -1,0 +1,49 @@
+﻿{% extends "base.html" %}
+{% block titulo %}Historial - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Historial de servicios</h1>
+
+<form method="GET" action="{{ url_for('listar_historial') }}">
+    <label for="q">Buscar (cliente, vehiculo o servicio):</label>
+    <input type="text" id="q" name="q" value="{{ q or '' }}">
+
+    <label for="desde">Desde:</label>
+    <input type="date" id="desde" name="desde" value="{{ desde or '' }}">
+
+    <label for="hasta">Hasta:</label>
+    <input type="date" id="hasta" name="hasta" value="{{ hasta or '' }}">
+
+    <button type="submit">Filtrar</button>
+    <a href="{{ url_for('listar_historial') }}">Limpiar</a>
+    <a href="{{ url_for('exportar_historial', q=q, desde=desde, hasta=hasta) }}">Exportar CSV</a>
+</form>
+
+{% if filas %}
+<table>
+    <tr>
+        <th>Folio</th>
+        <th>Cliente</th>
+        <th>Vehiculo</th>
+        <th>Servicio</th>
+        <th>Fecha</th>
+        <th>Total</th>
+        <th>Notas</th>
+    </tr>
+    {% for f in filas %}
+    <tr>
+        <td>{{ f.folio }}</td>
+        <td>{{ f.cliente }}</td>
+        <td>{{ f.vehiculo }}</td>
+        <td>{{ f.servicio }}</td>
+        <td>{{ f.fecha }}</td>
+        <td>${{ '%.2f'|format(f.total or 0) }}</td>
+        <td>{{ f.notas or '-' }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay registros con esos filtros.</p>
+{% endif %}
+{% endblock %}
+
+

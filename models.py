@@ -43,6 +43,8 @@ class Solicitud(db.Model):
     descripcion = db.Column(db.Text)
     fecha_solicitud = db.Column(db.DateTime, default=datetime.utcnow)
     estado = db.Column(db.String(30), default='pendiente')
+    a_domicilio = db.Column(db.Boolean, default=False)
+    urgente = db.Column(db.Boolean, default=False)
 
     usuario = db.relationship('Usuario', backref='solicitudes', lazy=True)
     vehiculo = db.relationship('Vehiculo', backref='solicitudes', lazy=True)
@@ -56,6 +58,8 @@ class Cotizacion(db.Model):
     detalle = db.Column(db.Text)
     fecha_emision = db.Column(db.DateTime, default=datetime.utcnow)
     estado = db.Column(db.String(20), default='pendiente')
+    descuento = db.Column(db.Numeric(5, 2), default=0)
+    vigencia = db.Column(db.Date)
 
     solicitud = db.relationship('Solicitud', backref='cotizaciones', lazy=True)
 
@@ -66,6 +70,16 @@ class Cita(db.Model):
     empleado_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     fecha_hora = db.Column(db.DateTime, nullable=False)
     estado = db.Column(db.String(30), default='agendada')
+    bahia = db.Column(db.String(30))
+    duracion_min = db.Column(db.Integer)
+    recordatorio_correo = db.Column(db.Boolean, default=False)
+    recordatorio_sms = db.Column(db.Boolean, default=False)
+    notas = db.Column(db.Text)
+    etapa = db.Column(db.String(30), default='recibido')
+    fecha_estimada_entrega = db.Column(db.DateTime)
+    fecha_real_entrega = db.Column(db.DateTime)
+    estatus_pago = db.Column(db.String(20), default='pendiente')
+    monto_pagado = db.Column(db.Numeric(10, 2), default=0)
 
     solicitud = db.relationship('Solicitud', backref='citas', lazy=True)
     empleado = db.relationship('Usuario', backref='citas_asignadas', lazy=True)
@@ -88,6 +102,8 @@ class Resenha(db.Model):
     calificacion = db.Column(db.Integer, nullable=False)
     comentario = db.Column(db.Text)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    publicar_nombre = db.Column(db.Boolean, default=False)
+    visible = db.Column(db.Boolean, default=True)
 
     usuario = db.relationship('Usuario', backref='resenhas', lazy=True)
     cita = db.relationship('Cita', backref='resenha', lazy=True)
@@ -101,5 +117,9 @@ class Factura(db.Model):
     total = db.Column(db.Numeric(10, 2), nullable=False)
     metodo_pago = db.Column(db.String(30))
     estado = db.Column(db.String(20), default='pendiente')
+    rfc = db.Column(db.String(20))
+    uso_cfdi = db.Column(db.String(50))
+    subtotal = db.Column(db.Numeric(10, 2))
+    iva = db.Column(db.Numeric(10, 2))
 
     cotizacion = db.relationship('Cotizacion', backref=db.backref('factura', uselist=False), lazy=True)

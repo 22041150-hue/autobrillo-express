@@ -14,6 +14,10 @@
             {% if current_user.is_authenticated %}
                 <a href="/dashboard">Dashboard</a>
                 <a href="/citas">Citas</a>
+                                {% if current_user.rol in ['admin', 'empleado'] %}
+                <a href="/historial">Historial</a>
+                <a href="/resenhas">Reseñas</a>
+                {% endif %}
                 <a href="/logout">Salir</a>
             {% else %}
                 <a href="/registro">Registro</a>

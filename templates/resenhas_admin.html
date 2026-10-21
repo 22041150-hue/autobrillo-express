@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Reseñas - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Moderación de reseñas</h1>
+
+{% if resenhas %}
+<table>
+    <tr>
+        <th>Cliente</th>
+        <th>Calificación</th>
+        <th>Comentario</th>
+        <th>Nombre público</th>
+        <th>Estado</th>
+        <th>Acción</th>
+    </tr>
+    {% for r in resenhas %}
+    <tr>
+        <td>{{ r.cita.solicitud.usuario.nombre }}</td>
+        <td>{{ r.calificacion }}/5</td>
+        <td>{{ r.comentario or '-' }}</td>
+        <td>{{ 'Sí' if r.publicar_nombre else 'No' }}</td>
+        <td>
+            {% if r.visible %}
+            <span class="badge badge-ok">visible</span>
+            {% else %}
+            <span class="badge badge-alerta">oculta</span>
+            {% endif %}
+        </td>
+        <td>
+            <form method="POST" action="{{ url_for('cambiar_visibilidad_resenha', resenha_id=r.id) }}">
+                <button type="submit">{{ 'Ocultar' if r.visible else 'Mostrar' }}</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay reseñas registradas.</p>
+{% endif %}
+{% endblock %}

@@ -5,12 +5,31 @@
 <p>Folio: {{ factura.folio }}</p>
 <p>Cotizacion #{{ factura.cotizacion.id }} / Solicitud #{{ factura.cotizacion.solicitud.id }}</p>
 <p>Cliente: {{ factura.cotizacion.solicitud.usuario.nombre }}</p>
-<p>Total: ${{ factura.total }}</p>
+<p>RFC: {{ factura.rfc or 'No especificado' }}</p>
+<p>Uso de CFDI: {{ factura.uso_cfdi or 'No especificado' }}</p>
 <p>Metodo de pago: {{ factura.metodo_pago or 'No especificado' }}</p>
 <p>Estado: {{ factura.estado }}</p>
 
+<table>
+    <tr><th>Concepto</th><th>Importe</th></tr>
+    <tr><td>Subtotal</td><td>${{ '%.2f'|format(factura.subtotal or 0) }}</td></tr>
+    <tr><td>IVA (16%)</td><td>${{ '%.2f'|format(factura.iva or 0) }}</td></tr>
+    <tr><th>Total</th><th>${{ '%.2f'|format(factura.total or 0) }}</th></tr>
+</table>
+
 {% if factura.estado == 'pendiente' %}
 <form method="POST" action="{{ url_for('pagar_factura', factura_id=factura.id) }}">
+    <label for="rfc">RFC:</label>
+    <input type="text" id="rfc" name="rfc" maxlength="13" required>
+
+    <label for="uso_cfdi">Uso de CFDI:</label>
+    <select name="uso_cfdi" id="uso_cfdi">
+        <option value="G01">G01 - Adquisicion de mercancias</option>
+        <option value="G03">G03 - Gastos en general</option>
+        <option value="S01">S01 - Sin efectos fiscales</option>
+        <option value="P01">P01 - Por definir</option>
+    </select>
+
     <label for="metodo_pago">Metodo de pago:</label>
     <select name="metodo_pago" id="metodo_pago">
         <option value="efectivo">Efectivo</option>

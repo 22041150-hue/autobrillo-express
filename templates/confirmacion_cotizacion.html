@@ -4,8 +4,10 @@
 <h1>Cotizacion generada con exito</h1>
 <p>Cotizacion #{{ cotizacion.id }} para la Solicitud #{{ cotizacion.solicitud.id }}</p>
 <p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
-<p>Monto: ${{ cotizacion.monto }}</p>
-<p>Detalle: {{ cotizacion.detalle }}</p>
+<p>Descuento aplicado: {{ cotizacion.descuento or 0 }}%</p>
+<p>Total: <strong>${{ cotizacion.monto }}</strong></p>
+<p>Vigencia: {{ cotizacion.vigencia.strftime('%d/%m/%Y') if cotizacion.vigencia else 'Sin fecha limite' }}</p>
+<p>Notas: {{ cotizacion.detalle }}</p>
 <p>Estado: {{ cotizacion.estado }}</p>
 
 {% if cotizacion.estado == 'pendiente' %}

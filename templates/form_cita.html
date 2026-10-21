@@ -1,18 +1,27 @@
 ﻿{% extends "base.html" %}
 {% block titulo %}Agendar Cita - AutoBrillo Express{% endblock %}
 {% block contenido %}
-<h1>Agendar Cita</h1>
-<p>Cotizacion #{{ cotizacion.id }}</p>
-<p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
+<h1>Agendar cita</h1>
+<p>Cotizacion #{{ cotizacion.id }} - Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
 <p>Vehiculo: {{ cotizacion.solicitud.vehiculo.marca }} {{ cotizacion.solicitud.vehiculo.modelo }}</p>
-<p>Servicio: {{ cotizacion.solicitud.servicio.nombre }}</p>
-<p>Monto: ${{ cotizacion.monto }}</p>
+<p>Servicio: {{ cotizacion.solicitud.servicio.nombre }} - Total: ${{ cotizacion.monto }}</p>
 
 <form method="POST" action="{{ url_for('crear_cita', cotizacion_id=cotizacion.id) }}">
     <label>Fecha y hora:</label>
     <input type="datetime-local" name="fecha_hora" required>
 
-    <label>Empleado asignado:</label>
+    <label>Bahia / Estacion de trabajo:</label>
+    <select name="bahia">
+        <option value="">Sin asignar</option>
+        {% for b in bahias %}
+        <option value="{{ b }}">{{ b }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Duracion estimada (minutos):</label>
+    <input type="number" name="duracion_min" min="10" value="{{ cotizacion.solicitud.servicio.duracion_estimada or 90 }}">
+
+    <label>Especialista asignado:</label>
     <select name="empleado_id">
         <option value="">Sin asignar por ahora</option>
         {% for empleado in empleados %}
@@ -20,6 +29,14 @@
         {% endfor %}
     </select>
 
-    <button type="submit">Agendar</button>
+    <h3>Recordatorio</h3>
+    <label class="casilla"><input type="checkbox" name="recordatorio_correo"> Enviar recordatorio por correo</label>
+    <label class="casilla"><input type="checkbox" name="recordatorio_sms"> Enviar recordatorio por SMS/WhatsApp</label>
+
+    <label>Notas de la cita:</label>
+    <textarea name="notas" rows="3" placeholder="Indicaciones especiales, punto de entrega, etc."></textarea>
+
+    <button type="submit">Confirmar cita</button>
+    <a class="boton" href="{{ url_for('listar_cotizaciones_aceptadas') }}">Cancelar</a>
 </form>
 {% endblock %}

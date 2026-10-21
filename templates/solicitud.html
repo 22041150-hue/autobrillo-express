@@ -1,14 +1,14 @@
 ﻿{% extends "base.html" %}
 {% block titulo %}Solicitar Servicio - AutoBrillo Express{% endblock %}
 {% block contenido %}
-<h1>Solicitar un Servicio</h1>
+<h1>Solicitud de servicio</h1>
 <form method="POST" action="{{ url_for('crear_solicitud') }}">
     <h3>Datos del cliente</h3>
     <label>Nombre completo:</label>
-    <input type="text" name="nombre_cliente" required>
+    <input type="text" name="nombre_cliente" placeholder="Ej. Cesar Lozano" required>
 
-    <label>Telefono:</label>
-    <input type="text" name="telefono_cliente" required>
+    <label>Telefono / WhatsApp:</label>
+    <input type="text" name="telefono_cliente" placeholder="618-000-0000" required>
 
     <h3>Datos del vehiculo</h3>
     <label>Marca:</label>
@@ -24,15 +24,18 @@
     <input type="text" name="placas">
 
     <h3>Servicio</h3>
-    <label>Selecciona un servicio:</label>
+    <label>Servicio deseado:</label>
     <select name="servicio_id" required>
         {% for servicio in servicios %}
         <option value="{{ servicio.id }}">{{ servicio.nombre }} - ${{ servicio.precio_base }}</option>
         {% endfor %}
     </select>
 
-    <label>Comentarios adicionales:</label>
-    <textarea name="descripcion" rows="4"></textarea>
+    <label>Descripcion del vehiculo o necesidad:</label>
+    <textarea name="descripcion" rows="4" placeholder="Color, observaciones..."></textarea>
+
+    <label class="casilla"><input type="checkbox" name="a_domicilio"> Servicio a domicilio</label>
+    <label class="casilla"><input type="checkbox" name="urgente"> Es urgente</label>
 
     <button type="submit">Enviar solicitud</button>
 </form>

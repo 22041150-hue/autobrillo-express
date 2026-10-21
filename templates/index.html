@@ -9,4 +9,16 @@
     <a class="boton" href="/registro">Registro</a>
     <a class="boton" href="/login">Iniciar sesión</a>
 </p>
+<h2>Lo que dicen nuestros clientes</h2>
+{% if resenhas %}
+{% for r in resenhas %}
+<div class="tarjeta">
+    <p>{{ '★' * r.calificacion }}{{ '☆' * (5 - r.calificacion) }}</p>
+    <p>{{ r.comentario or '' }}</p>
+    <p><strong>{{ r.cita.solicitud.usuario.nombre if r.publicar_nombre else 'Cliente anónimo' }}</strong></p>
+</div>
+{% endfor %}
+{% else %}
+<p>Aún no hay reseñas.</p>
+{% endif %}
 {% endblock %}

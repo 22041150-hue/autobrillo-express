@@ -10,7 +10,10 @@
         <th>Cliente</th>
         <th>Servicio</th>
         <th>Fecha</th>
+        <th>Bahia</th>
         <th>Estado</th>
+        <th>Etapa</th>
+        <th>Pago</th>
         <th>Acciones</th>
     </tr>
     {% for cita in citas %}
@@ -19,7 +22,8 @@
         <td>#{{ cita.id }}</td>
         <td>{{ cita.solicitud.usuario.nombre }}</td>
         <td>{{ cita.solicitud.servicio.nombre }}</td>
-        <td>{{ cita.fecha_hora }}</td>
+        <td>{{ cita.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td>{{ cita.bahia or '-' }}</td>
         <td>
             {% if cita.estado == 'completada' %}
             <span class="badge badge-ok">{{ cita.estado }}</span>
@@ -29,7 +33,21 @@
             <span class="badge badge-proceso">{{ cita.estado }}</span>
             {% endif %}
         </td>
+        <td>{{ cita.etapa or '-' }}</td>
         <td>
+            {% if cita.estatus_pago == 'pagado' %}
+            <span class="badge badge-ok">pagado</span>
+            {% elif cita.estatus_pago == 'parcial' %}
+            <span class="badge badge-proceso">parcial</span>
+            {% else %}
+            <span class="badge badge-alerta">pendiente</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if current_user.is_authenticated and current_user.rol in ['admin', 'empleado'] %}
+            <a href="{{ url_for('estatus_cita', cita_id=cita.id) }}">Estatus</a>
+            {% endif %}
+
             {% if cita.estado == 'agendada' %}
             <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='confirmada') }}">
                 <button type="submit">Confirmar</button>
