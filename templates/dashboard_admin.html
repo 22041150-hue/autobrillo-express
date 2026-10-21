@@ -1,28 +1,22 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Admin - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Dashboard - Administrador</h1>
-    <p>Bienvenido, {{ current_user.nombre }}</p>
-    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+﻿{% extends "base.html" %}
+{% block titulo %}Dashboard Admin - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Dashboard - Administrador</h1>
+<p>Bienvenido, {{ current_user.nombre }}</p>
 
-    <h2>Resumen</h2>
-    <ul>
-        <li>Solicitudes pendientes de cotizar: {{ total_solicitudes_pendientes }}</li>
-        <li>Cotizaciones pendientes de aceptar: {{ total_cotizaciones_pendientes }}</li>
-        <li>Citas agendadas/confirmadas: {{ total_citas_agendadas }}</li>
-        <li>Facturas pendientes de pago: {{ total_facturas_pendientes }}</li>
-    </ul>
+<h2>Resumen</h2>
+<table>
+    <tr><th>Indicador</th><th>Total</th></tr>
+    <tr><td>Solicitudes pendientes de cotizar</td><td>{{ total_solicitudes_pendientes }}</td></tr>
+    <tr><td>Cotizaciones pendientes de aceptar</td><td>{{ total_cotizaciones_pendientes }}</td></tr>
+    <tr><td>Citas agendadas/confirmadas</td><td>{{ total_citas_agendadas }}</td></tr>
+    <tr><td>Facturas pendientes de pago</td><td>{{ total_facturas_pendientes }}</td></tr>
+</table>
 
-    <h2>Accesos rapidos</h2>
-    <ul>
-        <li><a href="{{ url_for('listar_solicitudes_pendientes') }}">Ver solicitudes pendientes</a></li>
-        <li><a href="{{ url_for('listar_cotizaciones_aceptadas') }}">Ver cotizaciones aceptadas</a></li>
-        <li><a href="{{ url_for('listar_citas') }}">Ver todas las citas</a></li>
-    </ul>
-</body>
-</html>
+<h2>Accesos rapidos</h2>
+<p>
+    <a class="boton" href="{{ url_for('listar_solicitudes_pendientes') }}">Solicitudes pendientes</a>
+    <a class="boton" href="{{ url_for('listar_cotizaciones_aceptadas') }}">Cotizaciones aceptadas</a>
+    <a class="boton" href="{{ url_for('listar_citas') }}">Todas las citas</a>
+</p>
+{% endblock %}

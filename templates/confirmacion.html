@@ -1,21 +1,15 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Solicitud Confirmada - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Solicitud recibida con exito</h1>
-    <p>Numero de solicitud: <strong>#{{ solicitud.id }}</strong></p>
-    <p>Estado: {{ solicitud.estado }}</p>
-    <p>Fecha: {{ solicitud.fecha_solicitud }}</p>
+﻿{% extends "base.html" %}
+{% block titulo %}Solicitud Confirmada - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Solicitud recibida con exito</h1>
+<p>Numero de solicitud: <strong>#{{ solicitud.id }}</strong></p>
+<p>Estado: {{ solicitud.estado }}</p>
+<p>Fecha: {{ solicitud.fecha_solicitud }}</p>
 
-    <h3>Detalles</h3>
-    <p>Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }} ({{ solicitud.vehiculo.anio }})</p>
-    <p>Servicio solicitado: {{ solicitud.servicio.nombre }}</p>
-    <p>Descripcion: {{ solicitud.descripcion }}</p>
+<h3>Detalles</h3>
+<p>Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }} ({{ solicitud.vehiculo.anio }})</p>
+<p>Servicio solicitado: {{ solicitud.servicio.nombre }}</p>
+<p>Descripcion: {{ solicitud.descripcion }}</p>
 
-    <a href="{{ url_for('mostrar_formulario') }}">Crear otra solicitud</a>
-</body>
-</html>
+<a class="boton" href="{{ url_for('mostrar_formulario') }}">Crear otra solicitud</a>
+{% endblock %}

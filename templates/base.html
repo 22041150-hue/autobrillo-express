@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}AutoBrillo Express{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <header class="barra">
+        <a class="logo" href="/">AutoBrillo Express</a>
+        <nav>
+            <a href="/solicitud">Solicitar servicio</a>
+            {% if current_user.is_authenticated %}
+                <a href="/dashboard">Dashboard</a>
+                <a href="/citas">Citas</a>
+                <a href="/logout">Salir</a>
+            {% else %}
+                <a href="/registro">Registro</a>
+                <a href="/login">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main class="contenido">
+        {% block contenido %}{% endblock %}
+    </main>
+</body>
+</html>

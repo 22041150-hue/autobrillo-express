@@ -44,7 +44,7 @@ def rol_requerido(*roles_permitidos):
 
 @app.route('/')
 def index():
-    return 'AutoBrillo Express - Servidor funcionando'
+    return render_template('index.html')
 
 @app.route('/dashboard')
 @login_required

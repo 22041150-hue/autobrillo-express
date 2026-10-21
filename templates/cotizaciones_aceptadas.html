@@ -1,27 +1,28 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Cotizaciones Aceptadas - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Cotizaciones Aceptadas Pendientes de Agendar</h1>
+﻿{% extends "base.html" %}
+{% block titulo %}Cotizaciones Aceptadas - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Cotizaciones Aceptadas Pendientes de Agendar</h1>
 
-    {% if cotizaciones %}
-    <ul>
-        {% for cotizacion in cotizaciones %}
-        <li>
-            Cotizacion #{{ cotizacion.id }} -
-            Cliente: {{ cotizacion.solicitud.usuario.nombre }} -
-            Servicio: {{ cotizacion.solicitud.servicio.nombre }} -
-            Monto: ${{ cotizacion.monto }}
-            <a href="{{ url_for('mostrar_form_cita', cotizacion_id=cotizacion.id) }}">Agendar cita</a>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No hay cotizaciones aceptadas pendientes de agendar.</p>
-    {% endif %}
-</body>
-</html>
+{% if cotizaciones %}
+<table>
+    <tr>
+        <th>Cotizacion</th>
+        <th>Cliente</th>
+        <th>Servicio</th>
+        <th>Monto</th>
+        <th>Accion</th>
+    </tr>
+    {% for cotizacion in cotizaciones %}
+    <tr>
+        <td>#{{ cotizacion.id }}</td>
+        <td>{{ cotizacion.solicitud.usuario.nombre }}</td>
+        <td>{{ cotizacion.solicitud.servicio.nombre }}</td>
+        <td>${{ cotizacion.monto }}</td>
+        <td><a href="{{ url_for('mostrar_form_cita', cotizacion_id=cotizacion.id) }}">Agendar cita</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay cotizaciones aceptadas pendientes de agendar.</p>
+{% endif %}
+{% endblock %}

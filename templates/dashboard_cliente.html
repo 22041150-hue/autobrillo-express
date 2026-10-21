@@ -1,39 +1,35 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Cliente - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Dashboard - Cliente</h1>
-    <p>Bienvenido, {{ current_user.nombre }}</p>
-    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+﻿{% extends "base.html" %}
+{% block titulo %}Dashboard Cliente - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Dashboard - Cliente</h1>
+<p>Bienvenido, {{ current_user.nombre }}</p>
 
-    <h2>Mis solicitudes</h2>
-    {% if solicitudes %}
-    <ul>
-        {% for solicitud in solicitudes %}
-        <li>
-            Solicitud #{{ solicitud.id }} -
-            Servicio: {{ solicitud.servicio.nombre }} -
-            Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }} -
-            Estado: <strong>{{ solicitud.estado }}</strong>
+<h2>Mis solicitudes</h2>
+{% if solicitudes %}
+<table>
+    <tr>
+        <th>Solicitud</th>
+        <th>Servicio</th>
+        <th>Vehiculo</th>
+        <th>Estado</th>
+        <th>Cotizacion aceptada</th>
+        <th>Factura</th>
+    </tr>
+    {% for solicitud in solicitudes %}
+    {% set cotizacion_aceptada = solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
+    <tr>
+        <td>#{{ solicitud.id }}</td>
+        <td>{{ solicitud.servicio.nombre }}</td>
+        <td>{{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }}</td>
+        <td><span class="badge badge-proceso">{{ solicitud.estado }}</span></td>
+        <td>{% if cotizacion_aceptada %}${{ cotizacion_aceptada.monto }}{% else %}-{% endif %}</td>
+        <td>{% if cotizacion_aceptada and cotizacion_aceptada.factura %}{{ cotizacion_aceptada.factura.estado }}{% else %}-{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Aun no tienes solicitudes registradas con esta cuenta.</p>
+{% endif %}
 
-            {% set cotizacion_aceptada = solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
-            {% if cotizacion_aceptada %}
-            <br>Cotizacion aceptada: ${{ cotizacion_aceptada.monto }}
-                {% if cotizacion_aceptada.factura %}
-                - Factura: {{ cotizacion_aceptada.factura.estado }}
-                {% endif %}
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>Aun no tienes solicitudes registradas con esta cuenta.</p>
-    {% endif %}
-
-    <a href="{{ url_for('mostrar_formulario') }}">Nueva solicitud</a>
-</body>
-</html>
+<p><a class="boton" href="{{ url_for('mostrar_formulario') }}">Nueva solicitud</a></p>
+{% endblock %}

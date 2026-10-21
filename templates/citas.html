@@ -1,36 +1,47 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Citas - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Citas</h1>
+﻿{% extends "base.html" %}
+{% block titulo %}Citas - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Citas</h1>
 
-    {% if citas %}
-    <ul>
-        {% for cita in citas %}
-        {% set cotizacion_aceptada = cita.solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
-        <li>
-            Cita #{{ cita.id }} -
-            Cliente: {{ cita.solicitud.usuario.nombre }} -
-            Servicio: {{ cita.solicitud.servicio.nombre }} -
-            Fecha: {{ cita.fecha_hora }} -
-            Estado: <strong>{{ cita.estado }}</strong>
-
+{% if citas %}
+<table>
+    <tr>
+        <th>Cita</th>
+        <th>Cliente</th>
+        <th>Servicio</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+    </tr>
+    {% for cita in citas %}
+    {% set cotizacion_aceptada = cita.solicitud.cotizaciones | selectattr('estado', 'equalto', 'aceptada') | first %}
+    <tr>
+        <td>#{{ cita.id }}</td>
+        <td>{{ cita.solicitud.usuario.nombre }}</td>
+        <td>{{ cita.solicitud.servicio.nombre }}</td>
+        <td>{{ cita.fecha_hora }}</td>
+        <td>
+            {% if cita.estado == 'completada' %}
+            <span class="badge badge-ok">{{ cita.estado }}</span>
+            {% elif cita.estado == 'cancelada' %}
+            <span class="badge badge-alerta">{{ cita.estado }}</span>
+            {% else %}
+            <span class="badge badge-proceso">{{ cita.estado }}</span>
+            {% endif %}
+        </td>
+        <td>
             {% if cita.estado == 'agendada' %}
-            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='confirmada') }}" style="display:inline">
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='confirmada') }}">
                 <button type="submit">Confirmar</button>
             </form>
             {% elif cita.estado == 'confirmada' %}
-            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='completada') }}" style="display:inline">
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='completada') }}">
                 <button type="submit">Marcar completada</button>
             </form>
             {% endif %}
 
             {% if cita.estado not in ['completada', 'cancelada'] %}
-            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='cancelada') }}" style="display:inline">
+            <form method="POST" action="{{ url_for('actualizar_estado_cita', cita_id=cita.id, nuevo_estado='cancelada') }}">
                 <button type="submit">Cancelar</button>
             </form>
             {% endif %}
@@ -38,7 +49,7 @@
             {% if cita.estado == 'completada' and not cita.historial %}
             <a href="{{ url_for('mostrar_form_historial', cita_id=cita.id) }}">Registrar historial</a>
             {% elif cita.historial %}
-            <span>(Historial ya registrado)</span>
+            <span>(Historial registrado)</span>
             {% endif %}
 
             {% if cita.estado == 'completada' and not cita.resenha %}
@@ -48,17 +59,17 @@
             {% endif %}
 
             {% if cita.estado == 'completada' and cotizacion_aceptada and not cotizacion_aceptada.factura %}
-            <form method="POST" action="{{ url_for('crear_factura', cita_id=cita.id) }}" style="display:inline">
+            <form method="POST" action="{{ url_for('crear_factura', cita_id=cita.id) }}">
                 <button type="submit">Generar factura</button>
             </form>
             {% elif cotizacion_aceptada and cotizacion_aceptada.factura %}
             <a href="{{ url_for('confirmacion_factura', factura_id=cotizacion_aceptada.factura.id) }}">Ver factura ({{ cotizacion_aceptada.factura.estado }})</a>
             {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No hay citas registradas.</p>
-    {% endif %}
-</body>
-</html>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No hay citas registradas.</p>
+{% endif %}
+{% endblock %}

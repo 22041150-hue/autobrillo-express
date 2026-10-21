@@ -1,21 +1,15 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Iniciar Sesion - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Iniciar sesion</h1>
-    <form method="POST" action="{{ url_for('login') }}">
-        <label>Correo electronico:</label>
-        <input type="email" name="email" required><br>
+﻿{% extends "base.html" %}
+{% block titulo %}Iniciar Sesion - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Iniciar sesion</h1>
+<form method="POST" action="{{ url_for('login') }}">
+    <label>Correo electronico:</label>
+    <input type="email" name="email" required>
 
-        <label>Contrasena:</label>
-        <input type="password" name="password" required><br>
+    <label>Contrasena:</label>
+    <input type="password" name="password" required>
 
-        <button type="submit">Entrar</button>
-    </form>
-    <p>No tienes cuenta? <a href="{{ url_for('registro') }}">Registrate aqui</a></p>
-</body>
-</html>
+    <button type="submit">Entrar</button>
+</form>
+<p>No tienes cuenta? <a href="{{ url_for('registro') }}">Registrate aqui</a></p>
+{% endblock %}

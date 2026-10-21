@@ -1,23 +1,17 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Cotizacion Generada - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Cotizacion generada con exito</h1>
-    <p>Cotizacion #{{ cotizacion.id }} para la Solicitud #{{ cotizacion.solicitud.id }}</p>
-    <p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
-    <p>Monto: ${{ cotizacion.monto }}</p>
-    <p>Detalle: {{ cotizacion.detalle }}</p>
-    <p>Estado: {{ cotizacion.estado }}</p>
+{% extends "base.html" %}
+{% block titulo %}Cotizacion Generada - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Cotizacion generada con exito</h1>
+<p>Cotizacion #{{ cotizacion.id }} para la Solicitud #{{ cotizacion.solicitud.id }}</p>
+<p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
+<p>Monto: ${{ cotizacion.monto }}</p>
+<p>Detalle: {{ cotizacion.detalle }}</p>
+<p>Estado: {{ cotizacion.estado }}</p>
 
-    {% if cotizacion.estado == 'pendiente' %}
-    <form method="POST" action="{{ url_for('aceptar_cotizacion', cotizacion_id=cotizacion.id) }}">
-        <button type="submit">Aceptar cotizacion</button>
-    </form>
-    {% endif %}
-    <a href="{{ url_for('listar_solicitudes_pendientes') }}">Ver mas solicitudes pendientes</a>
-</body>
-</html>
+{% if cotizacion.estado == 'pendiente' %}
+<form method="POST" action="{{ url_for('aceptar_cotizacion', cotizacion_id=cotizacion.id) }}">
+    <button type="submit">Aceptar cotizacion</button>
+</form>
+{% endif %}
+<p><a href="{{ url_for('listar_solicitudes_pendientes') }}">Ver mas solicitudes pendientes</a></p>
+{% endblock %}

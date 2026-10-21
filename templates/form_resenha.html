@@ -1,29 +1,23 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dejar Resenha - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Dejar Resenha</h1>
-    <p>Cita #{{ cita.id }}</p>
-    <p>Servicio: {{ cita.solicitud.servicio.nombre }}</p>
+﻿{% extends "base.html" %}
+{% block titulo %}Dejar Resenha - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Dejar Resenha</h1>
+<p>Cita #{{ cita.id }}</p>
+<p>Servicio: {{ cita.solicitud.servicio.nombre }}</p>
 
-    <form method="POST" action="{{ url_for('crear_resenha', cita_id=cita.id) }}">
-        <label>Calificacion (1 a 5):</label>
-        <select name="calificacion" required>
-            <option value="5">5 - Excelente</option>
-            <option value="4">4 - Muy bueno</option>
-            <option value="3">3 - Bueno</option>
-            <option value="2">2 - Regular</option>
-            <option value="1">1 - Malo</option>
-        </select><br>
+<form method="POST" action="{{ url_for('crear_resenha', cita_id=cita.id) }}">
+    <label>Calificacion (1 a 5):</label>
+    <select name="calificacion" required>
+        <option value="5">5 - Excelente</option>
+        <option value="4">4 - Muy bueno</option>
+        <option value="3">3 - Bueno</option>
+        <option value="2">2 - Regular</option>
+        <option value="1">1 - Malo</option>
+    </select>
 
-        <label>Comentario:</label><br>
-        <textarea name="comentario" rows="4" cols="40"></textarea><br>
+    <label>Comentario:</label>
+    <textarea name="comentario" rows="4"></textarea>
 
-        <button type="submit">Enviar resenha</button>
-    </form>
-</body>
-</html>
+    <button type="submit">Enviar resenha</button>
+</form>
+{% endblock %}

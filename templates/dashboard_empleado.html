@@ -1,38 +1,48 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Empleado - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Dashboard - Empleado</h1>
-    <p>Bienvenido, {{ current_user.nombre }}</p>
-    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+﻿{% extends "base.html" %}
+{% block titulo %}Dashboard Empleado - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Dashboard - Empleado</h1>
+<p>Bienvenido, {{ current_user.nombre }}</p>
 
-    <h2>Mis citas asignadas</h2>
-    {% if citas %}
-    <ul>
-        {% for cita in citas %}
-        <li>
-            Cita #{{ cita.id }} -
-            Cliente: {{ cita.solicitud.usuario.nombre }} -
-            Servicio: {{ cita.solicitud.servicio.nombre }} -
-            Fecha: {{ cita.fecha_hora }} -
-            Estado: <strong>{{ cita.estado }}</strong>
-
+<h2>Mis citas asignadas</h2>
+{% if citas %}
+<table>
+    <tr>
+        <th>Cita</th>
+        <th>Cliente</th>
+        <th>Servicio</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+    </tr>
+    {% for cita in citas %}
+    <tr>
+        <td>#{{ cita.id }}</td>
+        <td>{{ cita.solicitud.usuario.nombre }}</td>
+        <td>{{ cita.solicitud.servicio.nombre }}</td>
+        <td>{{ cita.fecha_hora }}</td>
+        <td>
+            {% if cita.estado == 'completada' %}
+            <span class="badge badge-ok">{{ cita.estado }}</span>
+            {% elif cita.estado == 'cancelada' %}
+            <span class="badge badge-alerta">{{ cita.estado }}</span>
+            {% else %}
+            <span class="badge badge-proceso">{{ cita.estado }}</span>
+            {% endif %}
+        </td>
+        <td>
             {% if cita.estado == 'completada' and not cita.historial %}
             <a href="{{ url_for('mostrar_form_historial', cita_id=cita.id) }}">Registrar historial</a>
             {% elif cita.historial %}
-            <span>(Historial ya registrado)</span>
+            <span>(Historial registrado)</span>
             {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No tienes citas asignadas.</p>
-    {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No tienes citas asignadas.</p>
+{% endif %}
 
-    <a href="{{ url_for('listar_citas') }}">Ver todas las citas</a>
-</body>
-</html>
+<p><a class="boton" href="{{ url_for('listar_citas') }}">Ver todas las citas</a></p>
+{% endblock %}

@@ -1,26 +1,20 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Generar Cotizacion - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Generar Cotizacion</h1>
-    <p>Solicitud #{{ solicitud.id }}</p>
-    <p>Cliente: {{ solicitud.usuario.nombre }}</p>
-    <p>Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }}</p>
-    <p>Servicio: {{ solicitud.servicio.nombre }} (precio base: ${{ solicitud.servicio.precio_base }})</p>
-    <p>Descripcion del cliente: {{ solicitud.descripcion }}</p>
+﻿{% extends "base.html" %}
+{% block titulo %}Generar Cotizacion - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Generar Cotizacion</h1>
+<p>Solicitud #{{ solicitud.id }}</p>
+<p>Cliente: {{ solicitud.usuario.nombre }}</p>
+<p>Vehiculo: {{ solicitud.vehiculo.marca }} {{ solicitud.vehiculo.modelo }}</p>
+<p>Servicio: {{ solicitud.servicio.nombre }} (precio base: ${{ solicitud.servicio.precio_base }})</p>
+<p>Descripcion del cliente: {{ solicitud.descripcion }}</p>
 
-    <form method="POST" action="{{ url_for('crear_cotizacion', solicitud_id=solicitud.id) }}">
-        <label>Monto de la cotizacion:</label>
-        <input type="number" step="0.01" name="monto" required><br>
+<form method="POST" action="{{ url_for('crear_cotizacion', solicitud_id=solicitud.id) }}">
+    <label>Monto de la cotizacion:</label>
+    <input type="number" step="0.01" name="monto" required>
 
-        <label>Detalle:</label><br>
-        <textarea name="detalle" rows="4" cols="40"></textarea><br>
+    <label>Detalle:</label>
+    <textarea name="detalle" rows="4"></textarea>
 
-        <button type="submit">Guardar cotizacion</button>
-    </form>
-</body>
-</html>
+    <button type="submit">Guardar cotizacion</button>
+</form>
+{% endblock %}

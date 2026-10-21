@@ -1,45 +1,39 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Solicitar Servicio - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Solicitar un Servicio</h1>
-    <form method="POST" action="{{ url_for('crear_solicitud') }}">
-        <h3>Datos del cliente</h3>
-        <label>Nombre completo:</label>
-        <input type="text" name="nombre_cliente" required><br>
+﻿{% extends "base.html" %}
+{% block titulo %}Solicitar Servicio - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Solicitar un Servicio</h1>
+<form method="POST" action="{{ url_for('crear_solicitud') }}">
+    <h3>Datos del cliente</h3>
+    <label>Nombre completo:</label>
+    <input type="text" name="nombre_cliente" required>
 
-        <label>Telefono:</label>
-        <input type="text" name="telefono_cliente" required><br>
+    <label>Telefono:</label>
+    <input type="text" name="telefono_cliente" required>
 
-        <h3>Datos del vehiculo</h3>
-        <label>Marca:</label>
-        <input type="text" name="marca" required><br>
+    <h3>Datos del vehiculo</h3>
+    <label>Marca:</label>
+    <input type="text" name="marca" required>
 
-        <label>Modelo:</label>
-        <input type="text" name="modelo" required><br>
+    <label>Modelo:</label>
+    <input type="text" name="modelo" required>
 
-        <label>Anio:</label>
-        <input type="number" name="anio"><br>
+    <label>Anio:</label>
+    <input type="number" name="anio">
 
-        <label>Placas:</label>
-        <input type="text" name="placas"><br>
+    <label>Placas:</label>
+    <input type="text" name="placas">
 
-        <h3>Servicio</h3>
-        <label>Selecciona un servicio:</label>
-        <select name="servicio_id" required>
-            {% for servicio in servicios %}
-            <option value="{{ servicio.id }}">{{ servicio.nombre }} - ${{ servicio.precio_base }}</option>
-            {% endfor %}
-        </select><br>
+    <h3>Servicio</h3>
+    <label>Selecciona un servicio:</label>
+    <select name="servicio_id" required>
+        {% for servicio in servicios %}
+        <option value="{{ servicio.id }}">{{ servicio.nombre }} - ${{ servicio.precio_base }}</option>
+        {% endfor %}
+    </select>
 
-        <label>Comentarios adicionales:</label><br>
-        <textarea name="descripcion" rows="4" cols="40"></textarea><br>
+    <label>Comentarios adicionales:</label>
+    <textarea name="descripcion" rows="4"></textarea>
 
-        <button type="submit">Enviar solicitud</button>
-    </form>
-</body>
-</html>
+    <button type="submit">Enviar solicitud</button>
+</form>
+{% endblock %}

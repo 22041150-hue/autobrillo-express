@@ -1,31 +1,25 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Agendar Cita - AutoBrillo Express</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-</head>
-<body>
-    <h1>Agendar Cita</h1>
-    <p>Cotizacion #{{ cotizacion.id }}</p>
-    <p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
-    <p>Vehiculo: {{ cotizacion.solicitud.vehiculo.marca }} {{ cotizacion.solicitud.vehiculo.modelo }}</p>
-    <p>Servicio: {{ cotizacion.solicitud.servicio.nombre }}</p>
-    <p>Monto: ${{ cotizacion.monto }}</p>
+﻿{% extends "base.html" %}
+{% block titulo %}Agendar Cita - AutoBrillo Express{% endblock %}
+{% block contenido %}
+<h1>Agendar Cita</h1>
+<p>Cotizacion #{{ cotizacion.id }}</p>
+<p>Cliente: {{ cotizacion.solicitud.usuario.nombre }}</p>
+<p>Vehiculo: {{ cotizacion.solicitud.vehiculo.marca }} {{ cotizacion.solicitud.vehiculo.modelo }}</p>
+<p>Servicio: {{ cotizacion.solicitud.servicio.nombre }}</p>
+<p>Monto: ${{ cotizacion.monto }}</p>
 
-    <form method="POST" action="{{ url_for('crear_cita', cotizacion_id=cotizacion.id) }}">
-        <label>Fecha y hora:</label>
-        <input type="datetime-local" name="fecha_hora" required><br>
+<form method="POST" action="{{ url_for('crear_cita', cotizacion_id=cotizacion.id) }}">
+    <label>Fecha y hora:</label>
+    <input type="datetime-local" name="fecha_hora" required>
 
-        <label>Empleado asignado:</label>
-        <select name="empleado_id">
-            <option value="">Sin asignar por ahora</option>
-            {% for empleado in empleados %}
-            <option value="{{ empleado.id }}">{{ empleado.nombre }}</option>
-            {% endfor %}
-        </select><br>
+    <label>Empleado asignado:</label>
+    <select name="empleado_id">
+        <option value="">Sin asignar por ahora</option>
+        {% for empleado in empleados %}
+        <option value="{{ empleado.id }}">{{ empleado.nombre }}</option>
+        {% endfor %}
+    </select>
 
-        <button type="submit">Agendar</button>
-    </form>
-</body>
-</html>
+    <button type="submit">Agendar</button>
+</form>
+{% endblock %}
